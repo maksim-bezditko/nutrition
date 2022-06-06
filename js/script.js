@@ -44,9 +44,9 @@ window.addEventListener("DOMContentLoaded", () => {
 			})
 		}
 	})
-
+   
 	// Timer
-	let deadline = `2022-06-03:23:25:35`;
+	let deadline = `2023-06-06`;
 
 	function addZero(num) {
 		if (num >= 0 && num < 10) {
@@ -70,7 +70,6 @@ window.addEventListener("DOMContentLoaded", () => {
 			"minutes": minutes
 		}; 
 	}
-
 	function changeInscription(inscriptionUnits) {
 		const elementOfDOM = document.querySelector("#inscription");
 		
@@ -118,7 +117,7 @@ window.addEventListener("DOMContentLoaded", () => {
 			timer.querySelector("#hours").innerHTML = addZero(units.hours);
 			timer.querySelector("#minutes").innerHTML = addZero(units.minutes);
 			timer.querySelector("#seconds").innerHTML = addZero(units.seconds); 
-			console.log(units.total)
+			// console.log(units.total)
 			if (units.total <= 0) {
 				clearInterval(timerId);
 
@@ -133,4 +132,48 @@ window.addEventListener("DOMContentLoaded", () => {
 		}
 	}
 	setUnits(deadline, getInscription(deadline))
+
+	const buttonUp = document.querySelector(".buttontest")
+
+	function hideButton(item) {
+		item.classList.remove("show", "animat");
+		item.classList.add("hide");
+	}
+	function showButton(item) {
+		item.classList.remove("hide");
+		item.classList.add("show", "animat");
+	}
+	
+	hideButton(buttonUp)
+
+	let percentage = document.querySelector(".percentage");
+	let number = document.documentElement.scrollHeight - window.screen.height;
+
+	function test() {
+		if (document.documentElement.scrollTop > 300) {
+			showButton(buttonUp)
+		} else {
+			hideButton(buttonUp)
+		}
+		// percentage.textContent = `${Math.round(document.documentElement.scrollTop / number * 100)}%`
+		percentage.style.width = document.documentElement.scrollTop / number * 100 + "%";
+	}
+
+	function moveUp() {
+		// console.log(document.documentElement.scrollTop)
+		function action() {
+			if (document.documentElement.scrollTop > 0) {
+				document.documentElement.scrollTop -= 20;
+			} else {
+				clearInterval(timerId)
+			}
+		}
+		let timerId = setInterval(action, 1);
+	}
+
+	document.addEventListener("scroll", test)
+	// percentage.textContent = `${Math.round(document.documentElement.scrollTop / number * 100)}%`
+	buttonUp.addEventListener("click", moveUp)
+	// console.log(document.documentElement.scrollHeight)
+
 })
