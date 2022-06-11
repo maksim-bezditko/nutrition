@@ -1,7 +1,6 @@
 "use strict"
 
 window.addEventListener("DOMContentLoaded", () => {
-
 	const tabConts = document.querySelectorAll(".tabcontent"),
 		   tabs = document.querySelectorAll(".tabheader__item"),
 			tabsParent = document.querySelector(".tabheader__items")
@@ -43,7 +42,6 @@ window.addEventListener("DOMContentLoaded", () => {
 		}
 	})
    
-	// Timer
 	let deadline = `2023-06-06`;
 
 	function addZero(num) {
@@ -122,7 +120,6 @@ window.addEventListener("DOMContentLoaded", () => {
 			timer.querySelector("#hours").innerHTML = addZero(units.hours);
 			timer.querySelector("#minutes").innerHTML = addZero(units.minutes);
 			timer.querySelector("#seconds").innerHTML = addZero(units.seconds); 
-			// console.log(units.total)
 			if (units.total <= 0) {
 				let inscription;
 				clearInterval(timerId);
@@ -155,7 +152,8 @@ window.addEventListener("DOMContentLoaded", () => {
 	hideButton(buttonUp)
 
 	let percentage = document.querySelector(".percentage");
-	let number = document.documentElement.scrollHeight - window.screen.height;
+	let scrollMax = document.documentElement.scrollHeight - window.screen.height;
+
 
 	function test() {
 		if (document.documentElement.scrollTop > 300) {
@@ -163,12 +161,11 @@ window.addEventListener("DOMContentLoaded", () => {
 		} else {
 			hideButton(buttonUp)
 		}
-		// percentage.textContent = `${Math.round(document.documentElement.scrollTop / number * 100)}%`
-		percentage.style.width = document.documentElement.scrollTop / number * 100 + "%";
+		percentage.style.width = (document.documentElement.scrollTop / scrollMax * 100) + "%";
 	}
+	document.addEventListener("scroll", test)
 
 	function moveUp() {
-		// console.log(document.documentElement.scrollTop)
 		function action() {
 			if (document.documentElement.scrollTop > 0) {
 				document.documentElement.scrollTop -= 20;
@@ -178,11 +175,7 @@ window.addEventListener("DOMContentLoaded", () => {
 		}
 		let timerId = setInterval(action, 1);
 	}
-
-	document.addEventListener("scroll", test)
-	// percentage.textContent = `${Math.round(document.documentElement.scrollTop / number * 100)}%`
 	buttonUp.addEventListener("click", moveUp)
-	// console.log(document.documentElement.scrollHeight)
 
 	// Modal
 
@@ -307,5 +300,4 @@ window.addEventListener("DOMContentLoaded", () => {
 		}
 		showSlideByNumber(currentNumber);
 	})
-
 })
