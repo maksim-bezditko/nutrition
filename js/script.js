@@ -226,7 +226,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 	const modalTimerId = setTimeout(() => {
 		showModal()
-	}, 4000)
+	}, 15000)
 
 	function showModalDownThere() {
 		if (document.documentElement.scrollHeight <= document.documentElement.scrollTop + document.documentElement.clientHeight) {
@@ -261,11 +261,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
 	// Slider test
 
-	let   sliderCounter = document.querySelector("#current"),
-			offerSlides = document.querySelectorAll(".offer__slide"),
-			currentNumber,
-			rigthArrow = document.querySelector(".offer__slider-next"),
-			leftArrow = document.querySelector(".offer__slider-prev")
+	let sliderCounter = document.querySelector("#current"),
+		 offerSlides = document.querySelectorAll(".offer__slide"),
+		 currentNumber,
+		 rigthArrow = document.querySelector(".offer__slider-next"),
+		 leftArrow = document.querySelector(".offer__slider-prev")
 
 	function hideSlide(item) {
 		item.classList.remove("show");
@@ -307,9 +307,5 @@ window.addEventListener("DOMContentLoaded", () => {
 		}
 		showSlideByNumber(currentNumber);
 	})
-
-
-
-
 
 })
