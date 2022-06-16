@@ -152,17 +152,26 @@ window.addEventListener("DOMContentLoaded", () => {
 	hideButton(buttonUp)
 
 	let percentage = document.querySelector(".percentage");
-	let scrollMax = document.documentElement.scrollHeight - window.screen.height;
+	
 
 
 	function test() {
+
+		let windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+
+		let progress = document.documentElement.scrollTop / windowHeight * 100;
+
 		if (document.documentElement.scrollTop > 300) {
 			showButton(buttonUp)
 		} else {
 			hideButton(buttonUp)
 		}
-		percentage.style.width = (document.documentElement.scrollTop / scrollMax * 100) + "%";
+
+		percentage.style.width = `${progress}%`;
 	}
+
+	test()
+
 	document.addEventListener("scroll", test)
 
 	function moveUp() {
@@ -216,6 +225,11 @@ window.addEventListener("DOMContentLoaded", () => {
 			hideModal()
 		}
 	})
+	document.addEventListener("keyup", event => {
+		if (event.code === "Escape" && modal.classList.contains("show")) {
+			hideModal()
+		}
+	})
 
 	const modalTimerId = setTimeout(() => {
 		showModal()
@@ -244,13 +258,64 @@ window.addEventListener("DOMContentLoaded", () => {
 		cross.addEventListener("click", () => {
 			hideModal()
 		})
+
+		document.querySelector(".order").remove();
+		document.querySelector(".switch").remove();
 	}
-	
-	form.addEventListener("submit", () => {
-		hideModal()
-		changeModalContent()
-		document.removeEventListener("scroll", showModalDownThere)
+
+	const forms = document.querySelectorAll("form");
+
+	const message = {
+		success: "Your data has been successfully taken!",
+		loading: "Loading...",
+		failure: "Something went wrong, try again."
+	}
+
+	forms.forEach((form) => {
+		makeRequest(form);
 	})
+
+	function makeRequest(form) {
+
+		form.addEventListener("submit", (e) => {
+			e.preventDefault();
+
+			const messageBlock = document.createElement("div");
+			messageBlock.classList.add("message");
+			messageBlock.classList.add("fadein");
+			messageBlock.textContent = message.loading;
+			if (form.classList.contains("checking")) {
+				form.after(messageBlock)
+			} else {
+				form.append(messageBlock);
+			}
+			const request = new XMLHttpRequest();
+
+			request.open("POST", "server.php");
+			
+			const data = new FormData(form);
+
+			request.send(data)
+
+			request.addEventListener("load", () => {
+				if (request.status == 200) {
+					messageBlock.textContent = message.success;
+
+					form.reset();
+
+					setTimeout(() => {
+						messageBlock.remove()
+						hideModal()
+						changeModalContent()
+					}, 2000)
+
+					document.removeEventListener("scroll", showModalDownThere)
+				} else {
+					messageBlock.textContent = message.failure;
+				}
+			})
+		})
+	}
 
 	// Slider test
 
@@ -300,4 +365,60 @@ window.addEventListener("DOMContentLoaded", () => {
 		}
 		showSlideByNumber(currentNumber);
 	})
+
+	// cards with classes
+
+	class Card {
+		constructor(url, alt, title, descr, priceInDollar, costOfDollar, parentSelector) {
+			this.url = url;
+			this.alt = alt;
+			this.title = title;
+			this.descr = descr;
+			this.price = +priceInDollar * +costOfDollar;
+			this.parentSelector = parentSelector;
+		}
+		render() {
+			let elem = document.createElement("div");
+			elem.classList.add("menu__item")
+			elem.innerHTML = `
+				<img src=${this.url} alt=${this.alt}>
+				<h3 class="menu__item-subtitle">${this.title}</h3>
+				<div class="menu__item-descr">${this.descr}</div>
+				<div class="menu__item-divider"></div>
+				<div class="menu__item-price">
+					<div class="menu__item-cost">Цена:</div>
+					<div class="menu__item-total"><span>${this.price}</span> грн/день</div>
+				</div>`
+			document.querySelector(this.parentSelector).append(elem);
+		}
+	}
+	new Card(
+		"img/tabs/vegy.jpg", 
+		"vegy", 
+		'Меню "Фитнес"',
+		'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
+		9,
+		30,
+		".menu .container"
+	).render()
+
+	new Card(
+		"img/tabs/elite.jpg", 
+		"elite", 
+		'Меню “Премиум”',
+		'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!',
+		30,
+		30,
+		".menu .container"
+	).render()
+
+	new Card(
+		"img/tabs/post.jpg", 
+		"post", 
+		'Меню "Постное"',
+		'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
+		12,
+		30,
+		".menu .container"
+	).render()
 })
