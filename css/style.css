@@ -71,19 +71,6 @@
 	transition: all 0.2s linear 0s;
  }
 
-.animat {
-	animation-name: anim;
-	animation-duration: 1s
-}
-@keyframes anim {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
-}
-
  .buttontest::after {
 	content: "\f077";
 	font-family: FontAwesome;
