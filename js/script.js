@@ -216,12 +216,8 @@ window.addEventListener("DOMContentLoaded", () => {
 		})
 	})
 
-	cross.addEventListener("click", () => {
-		hideModal()
-	})
-
-	modal.addEventListener("click", event => {
-		if (event.target === document.querySelector(".modal") && modal.classList.contains("show")) {
+	document.addEventListener("click", event => {
+		if ((event.target === document.querySelector(".modal") && modal.classList.contains("show")) || event.target.getAttribute("data-close") == "") {
 			hideModal()
 		}
 	})
@@ -246,28 +242,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
 	document.addEventListener("scroll", showModalDownThere)
 
-	function changeModalContent() {
-		modal.innerHTML = 
-	  `<div class="modal__dialog">
-			<div class="modal__content">
-				<div class="modal__close">&times;</div>
-				<p class="later">Вы уже заполнили форму! Мы с Вами свяжемся в ближайшее время!</p>
-			</div>
-  		</div>`
-		cross = document.querySelector(".modal__close");
-		cross.addEventListener("click", () => {
-			hideModal()
-		})
-
-		document.querySelector(".order").remove();
-		document.querySelector(".switch").remove();
-	}
-
 	const forms = document.querySelectorAll("form");
 
 	const message = {
 		success: "Your data has been successfully taken!",
-		loading: "Loading...",
+		loading: "img/loading_icon/spinner.svg",
 		failure: "Something went wrong, try again."
 	}
 
@@ -280,41 +259,76 @@ window.addEventListener("DOMContentLoaded", () => {
 		form.addEventListener("submit", (e) => {
 			e.preventDefault();
 
-			const messageBlock = document.createElement("div");
-			messageBlock.classList.add("message");
-			messageBlock.classList.add("fadein");
-			messageBlock.textContent = message.loading;
-			if (form.classList.contains("checking")) {
-				form.after(messageBlock)
-			} else {
-				form.append(messageBlock);
-			}
-			const request = new XMLHttpRequest();
+			document.removeEventListener("scroll", showModalDownThere)
 
-			request.open("POST", "server.php");
+			const messageBlock = document.createElement("img");
+			messageBlock.src = message.loading;
+			messageBlock.style.cssText = `
+				display: block;
+				margin: 0 auto;
+				padding-top: 20px;
+			`;
+			form.insertAdjacentElement("afterend", messageBlock);
 			
 			const data = new FormData(form);
 
-			request.send(data)
+			let json = Object.fromEntries(data.entries())
 
-			request.addEventListener("load", () => {
-				if (request.status == 200) {
-					messageBlock.textContent = message.success;
-
-					form.reset();
-
-					setTimeout(() => {
-						messageBlock.remove()
-						hideModal()
-						changeModalContent()
-					}, 2000)
-
-					document.removeEventListener("scroll", showModalDownThere)
-				} else {
-					messageBlock.textContent = message.failure;
+			fetch("server.php", {
+				method: "POST",
+				body: JSON.stringify(json),
+				headers: {
+					"Content-type": "application/json"	
 				}
 			})
+			.then((data) => data.text())
+			.then((response) => {
+				hideModal()
+				console.log(response)
+				changeModalContent(message.success)
+			})
+			.catch(() => {
+				changeModalContent(message.failure)
+			})
+			.finally(() => {
+				messageBlock.remove()
+				form.reset();
+			})
 		})
+	}
+
+	function changeModalContent(message) {
+		const prevDialog = document.querySelector(".modal__dialog");
+
+		prevDialog.classList.add("hide");
+		prevDialog.classList.remove("show")
+		showModal()
+
+		const newDialog = document.createElement("div");
+		newDialog.classList.add("modal__dialog");
+		newDialog.innerHTML = `
+		<div class="modal__content">
+			<div data-close class="modal__close">&times;</div>
+			<div class="modal__title">${message}</div>
+		</div>	
+		`;
+		newDialog.querySelector(".modal__title").style.textTransform = "none";
+
+		document.querySelector(".modal").append(newDialog);
+
+		setTimeout(() => {
+			hideModal();
+			newDialog.remove();
+			prevDialog.classList.add("show");
+			prevDialog.classList.remove("hide");
+		}, 4000)
+
+		
+	}
+
+	function closeModal() {
+		modal.classList.add("hide");
+		modal.classList.hide("show");
 	}
 
 	// Slider test
@@ -421,4 +435,10 @@ window.addEventListener("DOMContentLoaded", () => {
 		30,
 		".menu .container"
 	).render()
+
+	// testing json-server
+
+	fetch("http://localhost:3000/menu")
+	.then(data => data.json())
+	.then(data => console.log(data))
 })

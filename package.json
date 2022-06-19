@@ -1,0 +1,25 @@
+{
+  "name": "food_dist",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maksim-bezditko/nutrition.git"
+  },
+  "keywords": [
+    "nutrion"
+  ],
+  "author": "Maksim Bezditko",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/maksim-bezditko/nutrition/issues"
+  },
+  "homepage": "https://github.com/maksim-bezditko/nutrition#readme",
+  "devDependencies": {
+    "json-server": "^0.17.0"
+  }
+}
