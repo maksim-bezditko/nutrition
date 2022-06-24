@@ -254,6 +254,17 @@ window.addEventListener("DOMContentLoaded", () => {
 		makeRequest(form);
 	})
 
+	async function makePostRequest(url, body) {
+		const res = await fetch(url, {
+			method: "POST",
+			headers: {
+				"Content-type": "application/json"
+			},
+			body: body
+		});
+		return await res.json(); 
+	}
+
 	function makeRequest(form) {
 
 		form.addEventListener("submit", (e) => {
@@ -272,16 +283,9 @@ window.addEventListener("DOMContentLoaded", () => {
 			
 			const data = new FormData(form);
 
-			let json = Object.fromEntries(data.entries())
+			let json = JSON.stringify(Object.fromEntries(data.entries()));
 
-			fetch("server.php", {
-				method: "POST",
-				body: JSON.stringify(json),
-				headers: {
-					"Content-type": "application/json"	
-				}
-			})
-			.then((data) => data.text())
+			makePostRequest("http://localhost:3000/requests", json)
 			.then((response) => {
 				hideModal()
 				console.log(response)
@@ -330,115 +334,191 @@ window.addEventListener("DOMContentLoaded", () => {
 		modal.classList.add("hide");
 		modal.classList.hide("show");
 	}
-
-	// Slider test
-
-	let sliderCounter = document.querySelector("#current"),
-		 offerSlides = document.querySelectorAll(".offer__slide"),
-		 currentNumber,
-		 rigthArrow = document.querySelector(".offer__slider-next"),
-		 leftArrow = document.querySelector(".offer__slider-prev")
-
-	function hideSlide(item) {
-		item.classList.remove("show");
-		item.classList.add("hide");
+	
+	async function getRequest(url) {
+		const res = await fetch(url);
+		return await res.json(); 
 	}
 
-	function showSlideByItem(item) {
-		item.classList.remove("hide");
-		item.classList.add("show");
-	}
-
-	function showSlideByNumber(i = 0) {
-		hideSlides()
-		sliderCounter.textContent = `${addZero(i + 1)}`
-		showSlideByItem(offerSlides[i])
-		currentNumber = i;
-	}
-
-	function hideSlides() {
-		offerSlides.forEach((item) => {
-			hideSlide(item);
+	getRequest('http://localhost:3000/menu').then((arr) => {
+		
+		arr.forEach(({img, altimg, title, descr, price}) => {
+			renderCard(img, altimg, title, descr, price, 30, ".menu .container")
 		})
-	}
-	hideSlides()
-	showSlideByNumber()
-
-	rigthArrow.addEventListener("click", () => {
-		currentNumber += 1;
-		if (currentNumber == 4) {
-			currentNumber -= 4;
-		}
-		showSlideByNumber(currentNumber);
 	})
 
-	leftArrow.addEventListener("click", () => {
-		currentNumber -= 1;
-		if (currentNumber == -1) {
-			currentNumber += 4;
-		}
-		showSlideByNumber(currentNumber);
+	function renderCard(img, altimg, title, descr, price, USD_UAH, parentSelector) {
+		let elem = document.createElement("div");
+		elem.classList.add("menu__item")
+		elem.innerHTML = `
+			<img src=${img} alt=${altimg}>
+			<h3 class="menu__item-subtitle">${title}</h3>
+			<div class="menu__item-descr">${descr}</div>
+			<div class="menu__item-divider"></div>
+			<div class="menu__item-price">
+				<div class="menu__item-cost">Цена:</div>
+				<div class="menu__item-total"><span>${Math.round(price * USD_UAH)}</span> грн/день</div>
+			</div>`
+		document.querySelector(parentSelector).append(elem);
+	}
+
+	// Carousel-like slider
+
+	const wrapper = document.querySelector('.offer__slider-wrapper'),
+			container = document.querySelector('.offer__slider-container'),
+			slides = document.querySelectorAll('.offer__slide'),
+			prev = document.querySelector('.offer__slider-prev'),
+			next = document.querySelector('.offer__slider-next'),
+			curr = document.querySelector('#current'),
+			total = document.querySelector('#total'),
+			width = parseInt(window.getComputedStyle(container).width),
+			slider = document.querySelector('.offer__slider'),
+			dots = [];
+
+	let currSlide = 1;
+	let currOffset = 0;	
+	let maxOffset = slides.length * width - width;
+
+	slider.style.position = "relative";
+
+	const indicators = document.createElement("ol");
+	indicators.style.cssText = `
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		z-index: 15;
+		display: flex;
+		justify-content: center;
+		margin-right: 15%;
+		margin-left: 15%;
+		list-style: none;
+	`;
+
+	slider.append(indicators);
+
+	for (let i = 0; i < slides.length; i++) {
+		const dot = document.createElement("li");
+		dot.style.cssText = `
+			box-sizing: content-box;
+			flex: 0 1 auto;
+			width: 30px;
+			height: 6px;
+			margin-right: 3px;
+			margin-left: 3px;
+			cursor: pointer;
+			background-color: #fff;
+			background-clip: padding-box;
+			border-top: 10px solid transparent;
+			border-bottom: 10px solid transparent;
+			opacity: .5;
+			transition: opacity .6s ease;
+		`;
+		dot.setAttribute("data-scroll-to", i + 1);
+		indicators.append(dot);
+
+		dots.push(dot);
+	}
+
+	container.style.cssText = `display: flex; transition: .2s; width: ${slides.length * width}px;`;
+	wrapper.style.cssText = `overflow: hidden`;
+	slides.forEach((item) => {
+		item.style.cssText = `width: ${width}`;
 	})
 
-	// cards with classes
+	total.textContent = addZero(slides.length);
+	curr.textContent = addZero(currSlide)
 
-	class Card {
-		constructor(url, alt, title, descr, priceInDollar, costOfDollar, parentSelector) {
-			this.url = url;
-			this.alt = alt;
-			this.title = title;
-			this.descr = descr;
-			this.price = +priceInDollar * +costOfDollar;
-			this.parentSelector = parentSelector;
+	dots.forEach((item) => {
+		item.style.opacity = "0.5";
+	})
+	dots[currSlide - 1].style.opacity = 1;
+
+	function show(elem) {
+		elem.classList.add("show");
+		elem.classList.remove("hide");
+	}
+
+	function hide(elem) {
+		elem.classList.remove("show");
+		elem.classList.add("hide");
+	}		
+
+
+	check(prev, next)
+
+	next.addEventListener("click", () => {
+		currSlide += 1
+		// if (currSlide > 4) {
+		// 	currSlide = 1;
+		// }
+		curr.textContent = addZero(currSlide)
+
+		if (currOffset >= maxOffset) {
+			currOffset = 0;
+			container.style.transform = `translateX(0)`;
+		} else {
+			currOffset += width;
+			container.style.transform = `translateX(-${currOffset}px)`;
 		}
-		render() {
-			let elem = document.createElement("div");
-			elem.classList.add("menu__item")
-			elem.innerHTML = `
-				<img src=${this.url} alt=${this.alt}>
-				<h3 class="menu__item-subtitle">${this.title}</h3>
-				<div class="menu__item-descr">${this.descr}</div>
-				<div class="menu__item-divider"></div>
-				<div class="menu__item-price">
-					<div class="menu__item-cost">Цена:</div>
-					<div class="menu__item-total"><span>${this.price}</span> грн/день</div>
-				</div>`
-			document.querySelector(this.parentSelector).append(elem);
+		check(prev, next)
+
+		dots.forEach((item) => {
+			item.style.opacity = "0.5";
+		})
+		dots[currSlide - 1].style.opacity = 1;
+	}) 
+
+	prev.addEventListener("click", () => {
+		currSlide -= 1
+		if (currSlide < 1) {
+			currSlide = 1;
+		}
+		curr.textContent = addZero(currSlide)
+
+		if (currOffset > 0) {
+			currOffset -= width;
+			container.style.transform = `translateX(-${currOffset}px)`;
+		}
+
+		check(prev, next)
+
+		dots.forEach((item) => {
+			item.style.opacity = "0.5";
+		})
+		dots[currSlide - 1].style.opacity = 1;
+	}) 
+
+	dots.forEach((dot, index) => {
+		dot.addEventListener("click", () => {
+			let offset = width * (dot.getAttribute("data-scroll-to") - 1);
+			currOffset = offset;
+			container.style.transform = `translateX(-${offset}px)`;
+
+			dots.forEach((item) => {
+				item.style.opacity = "0.5";
+			})
+			dot.style.opacity = 1;
+
+			// ok
+			currSlide = index + 1;
+
+			curr.textContent = addZero(currSlide)
+
+			check(prev, next)
+		})
+		
+	})
+	function check(prev, next) {
+		if (currSlide <= 1) {
+			prev.style.cssText = "opacity: 0";
+		} else {
+			prev.style.cssText = "opacity: 1";
+		}
+		if (currSlide >= slides.length) {
+			hide(next)
+		} else {
+			show(next)
 		}
 	}
-	new Card(
-		"img/tabs/vegy.jpg", 
-		"vegy", 
-		'Меню "Фитнес"',
-		'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-		9,
-		30,
-		".menu .container"
-	).render()
-
-	new Card(
-		"img/tabs/elite.jpg", 
-		"elite", 
-		'Меню “Премиум”',
-		'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!',
-		30,
-		30,
-		".menu .container"
-	).render()
-
-	new Card(
-		"img/tabs/post.jpg", 
-		"post", 
-		'Меню "Постное"',
-		'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
-		12,
-		30,
-		".menu .container"
-	).render()
-
-	// testing json-server
-
-	fetch("http://localhost:3000/menu")
-	.then(data => data.json())
-	.then(data => console.log(data))
 })
