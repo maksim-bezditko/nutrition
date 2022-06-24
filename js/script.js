@@ -326,26 +326,57 @@ window.addEventListener("DOMContentLoaded", () => {
 			prevDialog.classList.add("show");
 			prevDialog.classList.remove("hide");
 		}, 4000)
-
-		
 	}
 
 	function closeModal() {
 		modal.classList.add("hide");
 		modal.classList.hide("show");
 	}
+
+	let menuArr = [
+		{
+		  img: "img/tabs/vegy.jpg",
+		  altimg: "vegy",
+		  title: "Меню 'Фитнес'",
+		  descr: "Меню 'Фитнес' - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!",
+		  price: 9
+		},
+		{
+		  img: "img/tabs/post.jpg",
+		  altimg: "post",
+		  title: "Меню 'Постное'",
+		  descr: "Меню 'Постное' - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.",
+		  price: 14
+		},
+		{
+		  img: "img/tabs/elite.jpg",
+		  altimg: "elite",
+		  title: "Меню 'Премиум'",
+		  descr: "В меню 'Премиум' мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!",
+		  price: 21
+		}
+	 ]
 	
 	async function getRequest(url) {
 		const res = await fetch(url);
 		return await res.json(); 
 	}
 
-	getRequest('http://localhost:3000/menu').then((arr) => {
+	// getRequest('http://localhost:3000/menu').then((arr) => {
 		
-		arr.forEach(({img, altimg, title, descr, price}) => {
-			renderCard(img, altimg, title, descr, price, 30, ".menu .container")
+	// 	arr.forEach(({img, altimg, title, descr, price}) => {
+	// 		renderCard(img, altimg, title, descr, price, 30, ".menu .container")
+	// 	})
+	// })
+	new Promise((resolve) => {
+		resolve(menuArr)
+	}).then((arr) => {
+		
+			arr.forEach(({img, altimg, title, descr, price}) => {
+				renderCard(img, altimg, title, descr, price, 30, ".menu .container")
+			})
 		})
-	})
+
 
 	function renderCard(img, altimg, title, descr, price, USD_UAH, parentSelector) {
 		let elem = document.createElement("div");
@@ -376,8 +407,30 @@ window.addEventListener("DOMContentLoaded", () => {
 			dots = [];
 
 	let currSlide = 1;
-	let currOffset = 0;	
-	let maxOffset = slides.length * width - width;
+	let currOffset = 0;
+
+	function show(elem) {
+		elem.classList.add("show");
+		elem.classList.remove("hide");
+	}
+
+	function hide(elem) {
+		elem.classList.remove("show");
+		elem.classList.add("hide");
+	}
+
+	function check(prev, next) {
+		if (currSlide <= 1) {
+			prev.style.cssText = "opacity: 0";
+		} else {
+			prev.style.cssText = "opacity: 1";
+		}
+		if (currSlide >= slides.length) {
+			hide(next)
+		} else {
+			show(next)
+		}
+	}
 
 	slider.style.position = "relative";
 
@@ -420,8 +473,16 @@ window.addEventListener("DOMContentLoaded", () => {
 		dots.push(dot);
 	}
 
-	container.style.cssText = `display: flex; transition: .2s; width: ${slides.length * width}px;`;
-	wrapper.style.cssText = `overflow: hidden`;
+	container.style.cssText = `
+		display: flex; 
+		transition: .2s; 
+		width: ${slides.length * width}px;
+	`;
+
+	wrapper.style.cssText = `
+		overflow: hidden
+	`;
+
 	slides.forEach((item) => {
 		item.style.cssText = `width: ${width}`;
 	})
@@ -434,33 +495,22 @@ window.addEventListener("DOMContentLoaded", () => {
 	})
 	dots[currSlide - 1].style.opacity = 1;
 
-	function show(elem) {
-		elem.classList.add("show");
-		elem.classList.remove("hide");
-	}
-
-	function hide(elem) {
-		elem.classList.remove("show");
-		elem.classList.add("hide");
-	}		
-
-
 	check(prev, next)
 
 	next.addEventListener("click", () => {
 		currSlide += 1
-		// if (currSlide > 4) {
-		// 	currSlide = 1;
-		// }
+
 		curr.textContent = addZero(currSlide)
 
-		if (currOffset >= maxOffset) {
-			currOffset = 0;
-			container.style.transform = `translateX(0)`;
-		} else {
+		if (currSlide > 4) {
+			currSlide = 4;
+		}
+
+		if (currSlide <= slides.length) {
 			currOffset += width;
 			container.style.transform = `translateX(-${currOffset}px)`;
 		}
+
 		check(prev, next)
 
 		dots.forEach((item) => {
@@ -471,10 +521,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
 	prev.addEventListener("click", () => {
 		currSlide -= 1
+
+		curr.textContent = addZero(currSlide)
+
 		if (currSlide < 1) {
 			currSlide = 1;
 		}
-		curr.textContent = addZero(currSlide)
 
 		if (currOffset > 0) {
 			currOffset -= width;
@@ -491,8 +543,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
 	dots.forEach((dot, index) => {
 		dot.addEventListener("click", () => {
-			let offset = width * (dot.getAttribute("data-scroll-to") - 1);
+			const slideTo = dot.getAttribute("data-scroll-to") - 1;
+
+			let offset = width * slideTo;
+
 			currOffset = offset;
+
 			container.style.transform = `translateX(-${offset}px)`;
 
 			dots.forEach((item) => {
@@ -500,25 +556,14 @@ window.addEventListener("DOMContentLoaded", () => {
 			})
 			dot.style.opacity = 1;
 
-			// ok
 			currSlide = index + 1;
 
 			curr.textContent = addZero(currSlide)
 
 			check(prev, next)
 		})
-		
 	})
-	function check(prev, next) {
-		if (currSlide <= 1) {
-			prev.style.cssText = "opacity: 0";
-		} else {
-			prev.style.cssText = "opacity: 1";
-		}
-		if (currSlide >= slides.length) {
-			hide(next)
-		} else {
-			show(next)
-		}
-	}
+
+
+
 })
